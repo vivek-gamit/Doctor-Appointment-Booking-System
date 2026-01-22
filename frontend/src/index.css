@@ -1,0 +1,7 @@
+/* @tailwind base; */
+@import "tailwindcss";
+
+::-webkit-scrollbar{
+  @apply hidden
+}
+
