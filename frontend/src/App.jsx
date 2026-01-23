@@ -11,6 +11,8 @@ import Footer from './components/Footer'
 import Doctors from './pages/Doctors'
 
 
+
+
 function App() {
   return (
     <div>
@@ -25,6 +27,9 @@ function App() {
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/appointment/:docID' element={<Appointments />} />
         <Route path='/doctors' element={<Doctors />} />
+        <Route path='/doctors/:speciality' element={<Doctors />} />
+       
+      
 
       </Routes>
 
