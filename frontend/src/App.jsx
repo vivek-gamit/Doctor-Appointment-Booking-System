@@ -8,6 +8,7 @@ import MyProfile from './pages/MyProfile'
 import MyAppointments from './pages/MyAppointments'
 import Appointments from './pages/Appointment'
 import Footer from './components/Footer'
+import Doctors from './pages/Doctors'
 
 
 function App() {
@@ -23,6 +24,8 @@ function App() {
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/appointment/:docID' element={<Appointments />} />
+        <Route path='/doctors' element={<Doctors />} />
+
       </Routes>
 
       <Footer/>
