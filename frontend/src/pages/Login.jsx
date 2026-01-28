@@ -8,9 +8,38 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const onSubmitHandler = (event) => {
+  // NEW: Updated handler to talk to your PHP backend
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
 
+    const userData = { name, email, password };
+
+    // Determine which API endpoint to use
+    const endpoint = state === 'Sign Up'
+      ? 'http://localhost/doctor-backend/signup.php'
+      : 'http://localhost/doctor-backend/login.php';
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        alert(result.message);
+        // If login is successful, you might want to redirect the user or save a token
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error("Connection Error:", error);
+      alert("Could not connect to the backend server.");
+    }
   }
 
   return (
