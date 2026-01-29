@@ -1,19 +1,41 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
+  const navigate = useNavigate()
   const [state, setState] = useState('Sign Up')
-  const [role, setRole] = useState('patient') // New state: 'patient' or 'doctor'
+  const [role, setRole] = useState('patient')
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [speciality, setSpeciality] = useState('') // New state for doctors
+  const [speciality, setSpeciality] = useState('')
+  // --- NEW: Image state for file upload ---
+  const [image, setImage] = useState(null)
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    const userToken = localStorage.getItem('userToken')
+    if (userToken) {
+      // Both patients and doctors go to the main doctors list/home
+      navigate('/doctors')
+    }
+  }, [navigate])
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    // Include role and speciality in the data sent to PHP
-    const userData = { name, email, password, role, speciality };
+    // --- NEW: Using FormData to handle text + images ---
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('role', role);
+    formData.append('speciality', speciality);
+
+    if (image) {
+      formData.append('image', image);
+    }
 
     const endpoint = state === 'Sign Up'
       ? 'http://localhost/doctor-backend/signup.php'
@@ -22,15 +44,27 @@ const Login = () => {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
+        // Note: Browser automatically sets Content-Type for FormData
+        body: formData,
       });
 
       const result = await response.json();
 
       if (result.status === 'success') {
         alert(result.message);
-        // You can redirect to an Admin Panel here if role === 'doctor'
+
+        // Save session data
+        localStorage.setItem('userToken', 'logged_in');
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('userName', name || result.user?.name);
+
+        // THIS LINE IS REQUIRED:
+        if (result.user && result.user.image) {
+          localStorage.setItem('userImage', result.user.image); //
+        }
+
+        navigate('/doctors');
+
       } else {
         alert(result.message);
       }
@@ -44,7 +78,7 @@ const Login = () => {
     <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
       <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-85 sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-lg'>
         <p className='text-2xl font-semibold'>{state === 'Sign Up' ? 'Create Account' : 'Login'}</p>
-        
+
         {/* Role Selector */}
         <div className='flex gap-4 mb-2'>
           <label className='flex items-center gap-2 cursor-pointer'>
@@ -54,6 +88,19 @@ const Login = () => {
             <input type="radio" name="role" value="doctor" checked={role === 'doctor'} onChange={() => setRole('doctor')} /> Doctor
           </label>
         </div>
+
+        {/* --- NEW: Image Upload UI --- */}
+        {state === 'Sign Up' && (
+          <div className='flex items-center gap-4 mb-2'>
+            <label htmlFor="image" className='cursor-pointer'>
+              <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center border border-zinc-300 overflow-hidden'>
+                {image ? <img src={URL.createObjectURL(image)} alt="profile" className='w-full h-full object-cover' /> : <p className='text-xs'>Upload</p>}
+              </div>
+            </label>
+            <input onChange={(e) => setImage(e.target.files[0])} type="file" id="image" hidden />
+            <p className='text-zinc-500'>Profile Photo</p>
+          </div>
+        )}
 
         {state === 'Sign Up' && (
           <div className='w-full '>
@@ -72,7 +119,6 @@ const Login = () => {
           <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-zinc-300 rounded w-full p-2 mt-1' type="password" required />
         </div>
 
-        {/* Show Specialty only if it's a Doctor signing up */}
         {state === 'Sign Up' && role === 'doctor' && (
           <div className='w-full '>
             <p>Specialty</p>
